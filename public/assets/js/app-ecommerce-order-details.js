@@ -25,14 +25,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const order = response.data;
-    console.log(order, 'order-----');
+      console.log(order, 'order-----');
 
       fillOrderDetails(order);
       initOrderItemsTable(dtTable, order.items || []);
     })
     .catch(err => console.error('Error fetching order details:', err));
 
-    
+
   // --- Fill Order Info in DOM ---
   function fillOrderDetails(order) {
     $('#order-number').text(`Order #${order.order_number}`);
@@ -66,87 +66,93 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- DataTable Initialization ---
-function initOrderItemsTable(tableEl, items) {
-  if (!tableEl || !items?.length) {
-    console.warn('⚠️ No table element or items to display');
-    return;
-  }
+  function initOrderItemsTable(tableEl, items) {
+    if (!tableEl || !items?.length) {
+      console.warn('⚠️ No table element or items to display');
+      return;
+    }
 
-  // Destroy any previous instance cleanly
-  if ($.fn.DataTable.isDataTable(tableEl)) {
-    $(tableEl).DataTable().clear().rows.add(items).draw();
-    return;
-  }
+    // Destroy any previous instance cleanly
+    if ($.fn.DataTable.isDataTable(tableEl)) {
+      $(tableEl).DataTable().clear().rows.add(items).draw();
+      return;
+    }
 
-  // Ensure DataTable initializes only after element is visible
-  setTimeout(() => {
-    $(tableEl).DataTable({
-      data: items,
-      columns: [
-        { data: 'product_id', title: 'Product ID' },
-        { data: 'product_name', title: 'Product' },
-        { data: 'sku', title: 'SKU' },
-        { data: 'quantity', title: 'Qty' },
-        { data: 'price', title: 'Price', render: d => `₹ ${parseFloat(d).toFixed(2)}` },
-        {
-          data: null,
-          title: 'Total',
-          render: row => `₹${(row.quantity * row.price).toFixed(2)}`
-        }
-      ],
-      paging: false,
-      searching: false,
-      info: false,
-      responsive: true,
-      autoWidth: false,
-      language: {
-        emptyTable: 'No items found in this order',
-      },
-    });
-  }, 200); // short delay ensures DOM ready
-}
+    // Ensure DataTable initializes only after element is visible
+    setTimeout(() => {
+      $(tableEl).DataTable({
+        data: items,
+        columns: [
+          {
+            data: 'product_image',
+            title: 'Product Image',
+            render: function (data) {
+              if (!data) return '-';
+              return `<img src="${data}" alt="Product Image" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">`;
+            }
+          },
+          { data: 'product_id', title: 'Product ID' },
+          { data: 'product_name', title: 'Product' },
+          { data: 'sku', title: 'SKU' },
+          { data: 'quantity', title: 'Qty' },
+          { data: 'price', title: 'Price', render: d => `₹ ${parseFloat(d).toFixed(2)}` },
+          {
+            data: null,
+            title: 'Total',
+            render: row => `₹${(row.quantity * row.price).toFixed(2)}`
+          }
+        ],
+        paging: false,
+        searching: false,
+        info: false,
+        responsive: true,
+        autoWidth: false,
+        language: {
+          emptyTable: 'No items found in this order',
+        },
+      });
+    }, 200); // short delay ensures DOM ready
+  }
 
 
   // --- Handle Order Deletion ---
   $(document).on('click', '.delete-order', function (e) {
     e.preventDefault();
-    Swal.fire({
-      title: 'Are you sure?',
-      text: 'You will delete this order permanently.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Yes, delete it',
-      customClass: {
-        confirmButton: 'btn btn-danger me-2',
-        cancelButton: 'btn btn-secondary'
+
+    const orderId = $(this).data('id');
+    const row = $(this).closest('tr');
+
+    console.log('orderId');
+
+    if (!confirm('Are you sure you want to delete this order?')) return;
+
+    $.ajax({
+      url: `${APP_URL}/api/orders/${orderId}`,
+      type: 'DELETE',
+      data: {
+        _token: $('meta[name="csrf-token"]').attr('content')
       },
-      buttonsStyling: false
-    }).then(result => {
-      if (result.isConfirmed) {
-        $.ajax({
-          url: `${APP_URL}/api/orders/${orderId}`,
-          type: 'DELETE',
-          data: { _token: $('meta[name="csrf-token"]').attr('content') },
-          success: function () {
-            Swal.fire({
-              icon: 'success',
-              title: 'Deleted!',
-              text: 'Order removed successfully.',
-              timer: 1500,
-              showConfirmButton: false
-            });
-            setTimeout(() => {
-              window.location.href = `${APP_URL}/orders/list`;
-            }, 1500);
-          },
-          error: xhr => {
-            console.error('❌ Delete failed:', xhr.responseText);
-            Swal.fire('Error', 'Failed to delete order.', 'error');
-          }
+      success: res => {
+        // Remove row if datatable exists
+        if (typeof dt_orders !== 'undefined') {
+          dt_orders.row(row).remove().draw(false);
+        }
+
+        toastr.success(res.message || 'Order deleted successfully.');
+
+        // Close responsive modal if open
+        $('.dtr-bs-modal.show').each(function () {
+          const modal = bootstrap.Modal.getInstance(this);
+          modal?.hide();
         });
+      },
+      error: xhr => {
+        console.error('❌ Delete failed:', xhr.responseText);
+        toastr.error('Failed to delete order.');
       }
     });
   });
+
 
   // --- Handle Status Change ---
   $('#status-org').on('change', function (e) {

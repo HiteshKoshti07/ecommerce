@@ -40,7 +40,8 @@ class Product extends Model
         'product_fabric',
         'product_work',
         'product_length',
-        'product_care'
+        'product_care',
+        'upsell_products'
     ];
 
     protected $casts = [

@@ -1,5 +1,8 @@
 @extends('admin.layouts.app')
+@section('page_title', 'Add Products')
+
 @section('content')
+
 
 <div class="content-wrapper">
     <div class="container-xxl flex-grow-1 container-p-y">
@@ -70,6 +73,7 @@
                         </div>
                     </div>
 
+                    @if(!env('IMAGE_FROM'))
                     <!-- Media -->
                     <div class="card mb-6">
                         <h5 class="card-header">Product Photos</h5>
@@ -87,8 +91,6 @@
                             <small id="error-product-image" class="text-danger"></small>
                         </div>
                     </div>
-
-
 
                     <!-- Multi  -->
                     <div class="col-12">
@@ -110,6 +112,48 @@
 
                     </div>
                     <!-- Multi  -->
+                    @else
+
+                    <!-- Product imagekit Images -->
+                    <div class="card mb-6">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">ImageKit Images</h5>
+                        </div>
+
+                        <div class="card-body">
+                            <!-- Product Main Image -->
+                            <div class="mb-6">
+                                <label class="form-label" for="product-imagekit-main">
+                                    Product Main Image (ImageKit URL)
+                                </label>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="product-imagekit-main"
+                                    name="product_imagekit_main"
+                                    placeholder="Enter ImageKit main image URL"
+                                    aria-label="Product Main Image" />
+                                <small id="error-product-imagekit-main" class="text-danger"></small>
+                            </div>
+
+                            <!-- Product Gallery Images -->
+                            <div class="mb-6">
+                                <label class="form-label" for="product-imagekit-gallery">
+                                    Product Gallery Images (comma separated URLs)
+                                </label>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="product-imagekit-gallery"
+                                    name="product_imagekit_gallery"
+                                    placeholder="Enter ImageKit gallery image URLs"
+                                    aria-label="Product Gallery Images" />
+                                <small id="error-product-imagekit-gallery" class="text-danger"></small>
+                            </div>
+                        </div>
+                    </div>
+
+                    @endif
 
 
                     <!-- vidoe link  -->
@@ -214,9 +258,45 @@
                                 </div>
                             </div>
                         </div>
+
+
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="mb-6 col ecommerce-select2-dropdown">
+                                    <label class="form-label mb-1" for="upsell-products">Select Product</label>
+                                    <select id="upsell-products"
+                                        class="select2 form-select"
+                                        data-placeholder="Select Product"
+                                        multiple>
+                                    </select>
+                                    <small id="error-upsell-products" class="text-danger"></small>
+                                </div>
+                                <a href="javascript:void(0);" class="fw-medium btn btn-icon btn-label-primary ms-4"><i class="icon-base ti tabler-plus icon-md"></i></a>
+                            </div>
+                        </div>
                     </div>
 
 
+                    <!-- Product Seo -->
+                    <div class="card mb-6">
+                        <div class="card-header">
+                            <h5 class="card-tile mb-0">Product SEO</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Product Name -->
+                            <div class="mb-6">
+                                <label class="form-label" for="ecommerce-product-mata-description">Product Meta Description</label>
+                                <input type="text" class="form-control" id="ecommerce-product-meta-description" placeholder="Product Meta Description" name="productMetaDescrption" aria-label="Product Meta Description" />
+                                <small id="error-product-meta-description" class="text-danger"></small>
+                            </div>
+                            <div class="mb-6">
+                                <label class="form-label" for="ecommerce-product-meta-keywords">Product Meta Keywords</label>
+                                <input type="text" class="form-control" id="ecommerce-product-meta-keywords" placeholder="Product Meta Keywords" name="productMetaKeywords" aria-label="Product Meta Keywords" />
+                                <small id="error-product-meta-keywords" class="text-danger"></small>
+                            </div>
+
+                        </div>
+                    </div>
 
                 </div>
 

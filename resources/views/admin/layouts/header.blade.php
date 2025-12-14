@@ -415,12 +415,16 @@
                                     </li>
                                     <li>
                                         <div class="d-grid px-2 pt-2 pb-1">
-                                            <a class="btn btn-sm btn-danger d-flex" href="auth-login-cover.html" target="_blank">
-                                                <small class="align-middle">Logout</small>
-                                                <i class="icon-base ti tabler-logout ms-2 icon-14px"></i>
-                                            </a>
+                                            <form action="{{ route('auth.logout') }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-danger d-flex">
+                                                    <small class="align-middle">Logout</small>
+                                                    <i class="icon-base ti tabler-logout ms-2 icon-14px"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </li>
+
                                 </ul>
                             </li>
                             <!--/ User -->

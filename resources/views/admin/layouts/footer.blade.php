@@ -7,7 +7,7 @@
                      <script>
                          document.write(new Date().getFullYear());
                      </script>
-                     , made with ❤️ by <a href="https://pixinvent.com" target="_blank" class="footer-link">Pixinvent</a>
+                     , made with ❤️ by <a href="#" target="_blank" class="footer-link">{{ config('app.store_name') }}</a>
                  </div>
 
              </div>

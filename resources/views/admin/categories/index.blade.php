@@ -1,4 +1,6 @@
 @extends('admin.layouts.app')
+@section('page_title', 'Categories Page')
+
 @section('content')
 
 
@@ -9,7 +11,7 @@
         <div class="app-ecommerce-category">
             <!-- Category List Table -->
             <div class="card">
-                <div class="card-datatable">
+                <div class="card-datatable" style="margin-left: 10px;">
                     <table class="datatables-category-list table">
                         <thead>
                             <tr>

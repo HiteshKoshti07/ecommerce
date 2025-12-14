@@ -77,94 +77,93 @@ function handleSubmit(categoryId = null) {
 
 
     $.ajax({
-  url: `${APP_URL}/api/categories${categoryId ? '/' + categoryId : ''}`,
-  type: 'POST',
-  data: formData,
-  processData: false,
-  contentType: false,
+      url: `${APP_URL}/api/categories${categoryId ? '/' + categoryId : ''}`,
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
 
-  beforeSend: () => {
-    console.log('📤 Sending category data...', Object.fromEntries(formData.entries()));
-  },
+      beforeSend: () => {
+        console.log('📤 Sending category data...', Object.fromEntries(formData.entries()));
+      },
 
-  success: (res) => {
-    console.log('✅ Category API Response:', res);
+      success: (res) => {
+        console.log('✅ Category API Response:', res);
 
-    toastr.success(
-      categoryId ? 'Category updated successfully.' : 'Category created successfully.',
-      'Success',
-      { timeOut: 3000, progressBar: true }
-    );
+        toastr.success(
+          categoryId ? 'Category updated successfully.' : 'Category created successfully.',
+          'Success',
+          { timeOut: 3000, progressBar: true }
+        );
 
-    const offcanvas = bootstrap.Offcanvas.getInstance('#offcanvasEcommerceCategoryList');
-    if (offcanvas) offcanvas.hide();
+        const offcanvas = bootstrap.Offcanvas.getInstance('#offcanvasEcommerceCategoryList');
+        if (offcanvas) offcanvas.hide();
 
-    if (dt_category) dt_category.ajax.reload();
-    resetOffcanvas();
-  },
+        if (dt_category) dt_category.ajax.reload();
+        resetOffcanvas();
+      },
 
 
-error: xhr => {
-  console.group('❌ Category Save Failed');
-  console.error('XHR:', xhr);
-  console.groupEnd();
+      error: xhr => {
+        console.group('❌ Category Save Failed');
+        console.error('XHR:', xhr);
+        console.groupEnd();
 
-  // Clear previous errors
-  $('[id^="error-"]').text('');
+        // Clear previous errors
+        $('[id^="error-"]').text('');
 
-  let errorMsg = 'Something went wrong. Please try again.';
+        let errorMsg = 'Something went wrong. Please try again.';
 
-  if (xhr.responseJSON) {
-    const res = xhr.responseJSON;
+        if (xhr.responseJSON) {
+          const res = xhr.responseJSON;
 
-    // ✅ Laravel Validation Errors (422)
-    if (res.errors) {
-      errorMsg = res.message || 'Validation failed.';
+          // ✅ Laravel Validation Errors (422)
+          if (res.errors) {
+            errorMsg = res.message || 'Validation failed.';
 
-      Object.entries(res.errors).forEach(([key, messages]) => {
-        // Match Laravel field names to your input IDs
-        const fieldMap = {
-          title: 'title',
-          categoryTitle: 'title',
-          slug: 'slug',
-          status: 'status',
-        };
+            Object.entries(res.errors).forEach(([key, messages]) => {
+              // Match Laravel field names to your input IDs
+              const fieldMap = {
+                title: 'title',
+                categoryTitle: 'title',
+                slug: 'slug',
+                status: 'status',
+              };
 
-        const fieldId = fieldMap[key];
-        if (fieldId) {
-          console.log(`⚠️ Setting error for #error-${fieldId}:`, messages.join(', '));
-          $(`#error-${fieldId}`).text(messages.join(', '));
+              const fieldId = fieldMap[key];
+              if (fieldId) {
+                console.log(`⚠️ Setting error for #error-${fieldId}:`, messages.join(', '));
+                $(`#error-${fieldId}`).text(messages.join(', '));
+              }
+            });
+          }
+
+          // ✅ Custom API error (non-validation)
+          else if (res.error) {
+            errorMsg = `${res.message || 'Request failed.'}\n${typeof res.error === 'string'
+              ? res.error
+              : Object.values(res.error).flat().join('\n')
+              }`;
+          }
+
+          // ✅ Generic message
+          else if (res.message) {
+            errorMsg = res.message;
+          }
         }
-      });
-    }
 
-    // ✅ Custom API error (non-validation)
-    else if (res.error) {
-      errorMsg = `${res.message || 'Request failed.'}\n${
-        typeof res.error === 'string'
-          ? res.error
-          : Object.values(res.error).flat().join('\n')
-      }`;
-    }
-
-    // ✅ Generic message
-    else if (res.message) {
-      errorMsg = res.message;
-    }
-  }
-
-  // ✅ Toastr notification
-  toastr.error(errorMsg, 'Error', {
-    timeOut: 4000,
-    progressBar: true,
-    closeButton: true,
-    preventDuplicates: true
-  });
-}
+        // ✅ Toastr notification
+        toastr.error(errorMsg, 'Error', {
+          timeOut: 4000,
+          progressBar: true,
+          closeButton: true,
+          preventDuplicates: true
+        });
+      }
 
 
 
-});
+    });
 
 
 
@@ -281,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
         render: (data, type, full) => {
           const img = full.attachment
             ? `<img src="${APP_URL}/storage/${full.attachment}" alt="Category-${full.id}" class="rounded">`
-            : `<span class="avatar-initial rounded-2 bg-label-secondary">${(full.title || '?').slice(0,2).toUpperCase()}</span>`;
+            : `<span class="avatar-initial rounded-2 bg-label-secondary">${(full.title || '?').slice(0, 2).toUpperCase()}</span>`;
           const desc = full.description?.replace(/<\/?[^>]+(>|$)/g, '').slice(0, 50) || '';
           return `
             <div class="d-flex align-items-center">

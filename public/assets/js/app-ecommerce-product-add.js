@@ -47,7 +47,7 @@ $(document).ready(function () {
 
 
 
-    const previewTemplate = `<div class="dz-preview dz-file-preview">
+  const previewTemplate = `<div class="dz-preview dz-file-preview">
 <div class="dz-details">
   <div class="dz-thumbnail">
     <img data-dz-thumbnail>
@@ -66,21 +66,21 @@ $(document).ready(function () {
 
 
 
-let multiDropzone = null;
-const dropzoneMulti = document.querySelector('#dropzone-multi');
+  let multiDropzone = null;
+  const dropzoneMulti = document.querySelector('#dropzone-multi');
 
-if (dropzoneMulti) {
-  multiDropzone = new Dropzone(dropzoneMulti, {
-    previewTemplate: previewTemplate,
-    parallelUploads: 20,
-    uploadMultiple: true,
-    maxFilesize: 5,
-    addRemoveLinks: true
-  });
-}
+  if (dropzoneMulti) {
+    multiDropzone = new Dropzone(dropzoneMulti, {
+      previewTemplate: previewTemplate,
+      parallelUploads: 20,
+      uploadMultiple: true,
+      maxFilesize: 5,
+      addRemoveLinks: true
+    });
+  }
 
 
- 
+
 
 
 
@@ -118,6 +118,38 @@ if (dropzoneMulti) {
     });
   }
 
+
+  function loadProducts(selectedIds = [], excludeId = null) {
+    $.ajax({
+      url: `${APP_URL}/api/products?exclude=${excludeId || ''}`,
+      type: 'GET',
+      success: function (response) {
+
+        const productDropdown = $('#upsell-products');
+        productDropdown.empty();
+
+        response.data.forEach(product => {
+          productDropdown.append(
+            `<option value="${product.id}">${product.name}</option>`
+          );
+        });
+
+        if (selectedIds.length > 0) {
+          setTimeout(() => {
+            productDropdown.val(selectedIds).trigger('change');
+          }, 200);
+        }
+      }
+    });
+  }
+
+
+
+
+
+
+
+  // loadProducts();
   loadCategories();
 
   // ===============================
@@ -139,7 +171,6 @@ if (dropzoneMulti) {
       type: 'GET',
       success: function (response) {
         const p = response.data;
-
         $('#ecommerce-product-name').val(p.name);
         $('#ecommerce-product-sku').val(p.sku);
         $('#ecommerce-product-barcode').val(p.barcode);
@@ -154,11 +185,36 @@ if (dropzoneMulti) {
         $('#ecommerce-product-work').val(p.product_work);
         $('#ecommerce-product-length').val(p.product_length);
         $('#ecommerce-product-product-care').val(p.product_care);
+        $('#ecommerce-product-meta-description').val(p.meta_description);
+        $('#ecommerce-product-meta-keywords').val(p.meta_keywords);
+        $('#product-imagekit-main').val(p.product_image);
+        $('#product-imagekit-gallery').val(p.product_images);
 
 
         if (quill) quill.root.innerHTML = p.description || '';
 
         loadCategories(p.category_id);
+
+        const upsellIds = p.upsell_products
+          ? p.upsell_products
+            .split(",")
+            .map(id => id.trim().replace(/"/g, "")) // REMOVE quoted "
+          : [];
+
+        // console.log("Selected IDs:", upsellIds);
+        // console.log("id ----:", id);
+        // console.log("Available options:", $("#upsell-products option").map((i, o) => o.value).get());
+
+
+        // Remove the current product id from upsell list
+        const filteredUpsellIds = upsellIds.filter(pid => pid !== id);
+
+        console.log("Filtered Upsell IDs:", filteredUpsellIds);
+
+        // Now send this clean list
+        // loadProducts(filteredUpsellIds);
+        loadProducts(filteredUpsellIds, productId);
+
 
         // Load Variants
         if (p.variants) {
@@ -209,6 +265,7 @@ if (dropzoneMulti) {
       base_price: $('#ecommerce-product-price').val(),
       discount_price: $('#ecommerce-product-discount-price').val(),
       category_id: $('#category-org').val(),
+      upsell_products: $('#upsell-products').val(),
       status: $('#status-org').val(),
       collection: $('#pro-collection').val(),
       tags: $('#ecommerce-product-tags').val(),
@@ -217,7 +274,11 @@ if (dropzoneMulti) {
       product_fabric: $('#ecommerce-product-fabric').val(),
       product_work: $('#ecommerce-product-work').val(),
       product_length: $('#ecommerce-product-length').val(),
-      product_care: $('#ecommerce-product-product-care').val(),  
+      product_care: $('#ecommerce-product-product-care').val(),
+      meta_description: $('#ecommerce-product-meta-description').val(),
+      meta_keywords: $('#ecommerce-product-meta-keywords').val(),
+      product_image: $('#product-imagekit-main').val(),
+      product_images: $('#product-imagekit-gallery').val(),
       _token: $('meta[name="csrf-token"]').attr('content'),
     };
 
@@ -250,14 +311,14 @@ if (dropzoneMulti) {
       formData.append('product_image', productDropzone.files[0]);
     }
 
-        // Add MULTIPLE images from dropzone
-if (multiDropzone && multiDropzone.files.length > 0) {
-  multiDropzone.files.forEach(file => {
-    formData.append('product_images[]', file);
-  });
-}
+    // Add MULTIPLE images from dropzone
+    if (multiDropzone && multiDropzone.files.length > 0) {
+      multiDropzone.files.forEach(file => {
+        formData.append('product_images[]', file);
+      });
+    }
 
-      
+
 
     const url = isEdit ? `${APP_URL}/api/products/${productId}` : `${APP_URL}/api/products`;
     if (isEdit) formData.append('_method', 'PUT');
@@ -347,7 +408,8 @@ $(function () {
           placeholder: 'Placeholder text'
         });
 
-        $('.position-relative .select2').each(function () {z
+        $('.position-relative .select2').each(function () {
+          z
           $(this).select2({
             dropdownParent: $(this).closest('.position-relative')
           });

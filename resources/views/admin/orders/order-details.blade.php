@@ -1,4 +1,6 @@
 @extends('admin.layouts.app')
+@section('page_title', 'Order Details')
+
 @section('content')
 
 <!-- Content wrapper -->
@@ -25,7 +27,7 @@
         <div class="row">
             <div class="col-12 col-lg-8">
                 <div class="card mb-6">
-                    <div class="card-datatable">
+                    <div class="card-datatable" style="margin-left: 10px;">
                         <table class="datatables-order-details table mb-0">
                             <thead>
                                 <tr>

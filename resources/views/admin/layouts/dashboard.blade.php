@@ -1,4 +1,8 @@
 @extends('admin.layouts.app')
+@section('page_title', 'Dashboard')
+
+
+
 @section('content')
 <!-- Content -->
 <!-- Content wrapper -->

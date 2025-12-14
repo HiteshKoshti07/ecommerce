@@ -56,7 +56,8 @@ document.addEventListener('DOMContentLoaded', function () {
           targets: 2,
           render: (data, type, full) => {
             const image = full.product_image
-              ? `<img src="${APP_URL}/storage/${full.product_image}" 
+            
+              ? `<img src="${full.product_image}" 
                      class="rounded img-fluid" 
                      style="width:60px; height:60px; object-fit:cover;">`
               : `<span class="avatar-initial rounded-2 bg-label-secondary" 

@@ -10,17 +10,28 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
+
 class ProductController extends Controller
 {
     /**
      * Display a listing of products.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $products = Product::latest()->get();
+            $query = Product::latest();
 
-            Log::info('Fetched product list successfully.', ['count' => $products->count()]);
+            // Exclude product in edit mode
+            if ($request->has('exclude') && !empty($request->exclude)) {
+                $query->where('id', '!=', $request->exclude);
+            }
+
+            $products = $query->get();
+
+            Log::info('Fetched product list successfully.', [
+                'count' => $products->count(),
+                'exclude' => $request->exclude ?? null
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -28,6 +39,7 @@ class ProductController extends Controller
                 'data' => $products
             ], 200);
         } catch (Exception $e) {
+
             Log::error('Failed to fetch products: ' . $e->getMessage());
 
             return response()->json([
@@ -145,7 +157,7 @@ class ProductController extends Controller
                 'collection' => 'required',
                 'tags' => 'nullable|string|max:255',
                 'variants' => 'nullable|json',
-                'product_image' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048',
+                // 'product_image' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048',
                 'description' => 'nullable|string'
             ]);
 
@@ -176,25 +188,44 @@ class ProductController extends Controller
                 'variants' => $validated['variants'] ?? null,
             ];
 
-            // ✅ Handle image upload
-            if ($request->hasFile('product_image')) {
-                $image = $request->file('product_image');
-                $extension = $image->getClientOriginalExtension();
-                $filename = uniqid('prod_', true) . '.' . strtolower($extension);
-                $path = $image->storeAs('products', $filename, 'public');
-                $data['product_image'] = $path;
+            if ($request->has('upsell_products')) {
+                $data['upsell_products'] = json_encode($request->upsell_products);
             }
 
-            $productImages = [];
-            if ($request->hasFile('product_images')) {
-                foreach ($request->file('product_images') as $image) {
-                    $filename = uniqid('gallery_', true) . '.' . $image->getClientOriginalExtension();
-                    $path = $image->storeAs('products/gallery', $filename, 'public');
-                    $productImages[] = $path;
+            if (env('IMAGE_FROM')) {
+                // ✅ ImageKit URLs
+                $data['product_image'] = $request->product_image;
+                // gallery URLs (comma separated)
+                $galleryImages = array_filter(
+                    array_map('trim', explode(',', $request->product_images))
+                );
+
+                $data['product_images'] = json_encode($galleryImages);
+            } else {
+
+                // ✅ Local file upload (existing logic)
+                if ($request->hasFile('product_image')) {
+                    $image = $request->file('product_image');
+                    $filename = uniqid('prod_', true) . '.' . $image->getClientOriginalExtension();
+                    $path = $image->storeAs('products', $filename, 'public');
+                    $data['product_image'] = $path;
                 }
-            }
-            $data['product_images'] = json_encode($productImages);
 
+                $productImages = [];
+                if ($request->hasFile('product_images')) {
+                    foreach ($request->file('product_images') as $image) {
+                        $filename = uniqid('gallery_', true) . '.' . $image->getClientOriginalExtension();
+                        $path = $image->storeAs('products/gallery', $filename, 'public');
+                        $productImages[] = $path;
+                    }
+                }
+
+                $data['product_images'] = json_encode($productImages);
+            }
+
+            $data['meta_title'] = $request->name;
+            $data['meta_description'] = $request->meta_description;
+            $data['meta_keywords'] = $request->meta_keywords;
             $data['product_video']  = $request->product_video;
             $data['product_fabric'] = $request->product_fabric;
             $data['product_work']   = $request->product_work;
@@ -250,7 +281,7 @@ class ProductController extends Controller
 
         // If no collection query string provided, return all with selected fields
         if (!$collection) {
-            $products = Product::select('name', 'slug', 'sku', 'base_price', 'product_image', 'discount_price')->get();
+            $products = Product::select('id', 'name', 'slug', 'sku', 'base_price', 'product_image', 'discount_price')->get();
 
             return response()->json([
                 'success' => true,
@@ -276,6 +307,27 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'collection' => $collection,
+            'count' => $products->count(),
+            'data' => $products
+        ]);
+    }
+
+
+    public function upsellProducts(Request $request)
+    {
+        $ids = $request->ids; // array of IDs
+
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or empty IDs'
+            ], 400);
+        }
+
+        $products = Product::whereIn('id', $ids)->get();
+
+        return response()->json([
+            'success' => true,
             'count' => $products->count(),
             'data' => $products
         ]);

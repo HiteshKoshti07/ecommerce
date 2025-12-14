@@ -1,4 +1,6 @@
 @extends('admin.layouts.app')
+@section('page_title', 'Product List')
+
 @section('content')
 
 
@@ -83,7 +85,7 @@
                 <div class="col-md-4 product_stock"></div>
             </div>
         </div>
-        <div class="card-datatable">
+        <div class="card-datatable" style="margin-left: 10px;">
             <table class="datatables-products table">
                 <thead class="border-top">
                     <tr>

@@ -8,6 +8,8 @@ use App\Models\Order;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Mail\OrderPlacedMail;
+use Illuminate\Support\Facades\Mail;
 
 
 
@@ -52,6 +54,8 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
             'total_amount' => 'required|numeric|min:0', // ← ADD THIS
+            'items.*.product_image' => 'required|string',  // ✔️ Missing earlier
+
 
         ]);
 
@@ -92,15 +96,29 @@ class OrderController extends Controller
                     'variant' => $variant,   // ✅ FIXED
                     'quantity' => $item['quantity'],
                     'price' => $item['price'],
+                    'product_image' => $item['product_image']
                     // 'subtotal' => $item['subtotal'],
                 ]);
             }
 
-            Log::info('All order items saved.', ['order_id' => $order->id]);
 
             \DB::commit();
+            $orderData = $order->load('items')->toArray();
+            Log::info('All order items saved.', ['order_id' => json_encode($orderData)]);
 
-            Log::info('Order transaction committed.', ['order_id' => $order->id]);
+
+            // To customer
+            if (!empty($order->customer_email)) {
+                Mail::to($order->customer_email)->send(new OrderPlacedMail($orderData));
+            }
+
+            // To admin
+            $adminEmail = env('SALES_EMAIL');
+            if (!empty($adminEmail)) {
+                Mail::to($adminEmail)->send(new OrderPlacedMail($orderData));
+            }
+
+            Log::info('Order emails sent successfully.', ['order_id' => $order->id]);
 
             return response()->json([
                 'message' => 'Order created successfully.',

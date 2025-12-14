@@ -1,4 +1,6 @@
 @extends('admin.layouts.app')
+@section('page_title', 'Order List')
+
 @section('content')
 
 <!-- Content wrapper -->

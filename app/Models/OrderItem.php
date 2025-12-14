@@ -25,6 +25,7 @@ class OrderItem extends Model
         'quantity',
         'price',
         'subtotal',
+        'product_image'
     ];
 
     protected $casts = [
