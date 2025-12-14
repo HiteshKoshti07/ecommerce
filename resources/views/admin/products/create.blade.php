@@ -12,10 +12,10 @@
                     <h4 class="mb-1" id="page-title">Add a new Product</h4>
                 </div>
                 <div class="d-flex align-content-center flex-wrap gap-4">
-                    <div class="d-flex gap-4">
-                        <button class="btn btn-label-secondary">Discard</button>
-                        <button class="btn btn-label-primary">Save draft</button>
-                    </div>
+                    <button type="button" class="btn btn-label-secondary" onclick="window.history.back()">
+                        Discard
+                    </button>
+
                     <button type="submit" class="btn btn-primary" id="submitProduct">Publish product</button>
                 </div>
             </div>

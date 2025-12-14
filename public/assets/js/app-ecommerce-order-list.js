@@ -25,9 +25,43 @@ document.addEventListener('DOMContentLoaded', () => {
     cancelled: { title: 'Cancelled', class: 'text-secondary' }
   };
 
-  // 🔹 Initialize DataTable
+  // 🔹 Date Filter State
+  let currentFilter = 'today';
+  let customDateRange = null;
+
+  // 🔹 Helper function to build AJAX URL with filter params
+  const buildAjaxUrl = (filter, startDate = null, endDate = null) => {
+    let url = `${APP_URL}/api/orders?filter=${filter}`;
+    if (filter === 'custom' && startDate && endDate) {
+      url += `&start_date=${startDate}&end_date=${endDate}`;
+    }
+    return url;
+  };
+
+  // 🔹 Update statistics cards with data
+  const updateStatistics = (stats) => {
+    if (stats) {
+      document.getElementById('statTotalOrders').textContent = stats.total_orders || 0;
+      document.getElementById('statPendingOrders').textContent = stats.pending_orders || 0;
+      document.getElementById('statCancelledOrders').textContent = stats.cancelled_orders || 0;
+      document.getElementById('statCompletedOrders').textContent = stats.completed_orders || 0;
+    }
+  };
+
+  // 🔹 Initialize DataTable with default "today" filter
   const dt_orders = new DataTable(dtTable, {
-    ajax: { url: `${APP_URL}/api/orders`, type: 'GET', dataSrc: r => r.data },
+    ajax: { 
+      url: buildAjaxUrl('today'),
+      type: 'GET', 
+      dataSrc: (json) => {
+        // Update statistics when data is loaded
+        if (json.statistics) {
+          updateStatistics(json.statistics);
+        }
+        // Return data array for DataTable
+        return json.data || [];
+      }
+    },
     columns: [
       { data: 'id' },
       { data: 'id', orderable: false, render: DataTable.render.select() },
@@ -164,6 +198,81 @@ document.addEventListener('DOMContentLoaded', () => {
     const orderId = $(this).data('id');
     window.location.href = `${APP_URL}/orders/details?id=${orderId}`;
   });
+
+  // 📅 Date Filter Functionality
+  const dateFilterSelect = document.getElementById('dateFilter');
+  const customDateRangeContainer = document.getElementById('customDateRangeContainer');
+  const customDateRangeInput = document.getElementById('customDateRange');
+
+  // Initialize Flatpickr for custom date range (hidden initially)
+  let flatpickrInstance = null;
+  
+  // Initialize flatpickr when custom range is selected
+  const initCustomDateRange = () => {
+    if (!flatpickrInstance && typeof flatpickr !== 'undefined' && customDateRangeInput) {
+      flatpickrInstance = flatpickr(customDateRangeInput, {
+        mode: 'range',
+        dateFormat: 'Y-m-d',
+        maxDate: 'today',
+        onChange: function(selectedDates, dateStr) {
+          // Only apply filter when both dates are selected
+          if (selectedDates.length === 2) {
+            const startDate = selectedDates[0].toISOString().split('T')[0];
+            const endDate = selectedDates[1].toISOString().split('T')[0];
+            customDateRange = { startDate, endDate };
+            applyDateFilter('custom', startDate, endDate);
+          }
+        }
+      });
+    }
+  };
+
+  // Apply date filter and reload DataTable
+  const applyDateFilter = (filter, startDate = null, endDate = null) => {
+    currentFilter = filter;
+    const ajaxUrl = buildAjaxUrl(filter, startDate, endDate);
+    
+    // Update DataTable AJAX URL and reload (statistics will update via dataSrc callback)
+    dt_orders.ajax.url(ajaxUrl).load();
+  };
+
+  // Handle date filter dropdown change
+  if (dateFilterSelect) {
+    dateFilterSelect.addEventListener('change', function() {
+      const selectedFilter = this.value;
+
+      if (selectedFilter === 'custom') {
+        // Show custom date range picker
+        if (customDateRangeContainer) {
+          customDateRangeContainer.classList.remove('d-none');
+        }
+        
+        // Initialize flatpickr if not already initialized
+        setTimeout(() => {
+          initCustomDateRange();
+        }, 100);
+        
+        // If date range is already selected, apply it immediately
+        if (customDateRange && customDateRange.startDate && customDateRange.endDate) {
+          applyDateFilter('custom', customDateRange.startDate, customDateRange.endDate);
+        }
+      } else {
+        // Hide custom date range picker
+        if (customDateRangeContainer) {
+          customDateRangeContainer.classList.add('d-none');
+        }
+        
+        // Clear flatpickr selection if instance exists
+        if (flatpickrInstance) {
+          flatpickrInstance.clear();
+        }
+        customDateRange = null;
+        
+        // Apply the selected filter
+        applyDateFilter(selectedFilter);
+      }
+    });
+  }
 
   // 🎨 UI Class Tweaks after table render
   setTimeout(() => {

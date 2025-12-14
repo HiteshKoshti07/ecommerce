@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Mail\OrderPlacedMail;
 use Illuminate\Support\Facades\Mail;
+use Carbon\Carbon;
 
 
 
@@ -17,17 +18,109 @@ class OrderController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * Supports date filtering with default to Today's orders
+     * 
+     * Query Parameters:
+     * - filter: today|yesterday|last_7_days|last_30_days|this_month|last_month|custom
+     * - start_date: Required if filter=custom (Y-m-d format)
+     * - end_date: Required if filter=custom (Y-m-d format)
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-        $orders = Order::orderBy('created_at', 'desc')->paginate(10);
+        $query = Order::query();
 
-        return response()->json($orders);
-        // return response()->json([
-        //     'data' => $products
-        // ], 200);
+        // Get filter type, default to 'today'
+        $filter = $request->get('filter', 'today');
 
+        // Apply date filtering based on filter type
+        switch ($filter) {
+            case 'today':
+                $query->today();
+                break;
+
+            case 'yesterday':
+                $query->yesterday();
+                break;
+
+            case 'last_7_days':
+                $query->lastDays(7);
+                break;
+
+            case 'last_30_days':
+                $query->lastDays(30);
+                break;
+
+            case 'this_month':
+                $query->thisMonth();
+                break;
+
+            case 'last_month':
+                $query->lastMonth();
+                break;
+
+            case 'custom':
+                $startDate = $request->get('start_date');
+                $endDate = $request->get('end_date');
+
+                if ($startDate && $endDate) {
+                    $query->dateRange($startDate, $endDate);
+                } else {
+                    // If custom is selected but dates are missing, default to today
+                    $query->today();
+                }
+                break;
+
+            default:
+                // Fallback to today if invalid filter
+                $query->today();
+                break;
+        }
+
+        // Calculate statistics using the same filtered query (before pagination)
+        $stats = $this->calculateOrderStatistics(clone $query);
+
+        // Order by created_at descending and paginate
+        $orders = $query->orderBy('created_at', 'desc')->paginate(10);
+
+        // Return paginated response with statistics
+        $response = $orders->toArray();
+        $response['statistics'] = $stats;
+
+        return response()->json($response);
+    }
+
+    /**
+     * Calculate order statistics for the given query
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return array
+     */
+    private function calculateOrderStatistics($query): array
+    {
+        // Total orders count
+        $totalOrders = (clone $query)->count();
+
+        // Pending orders (pending + processing)
+        $pendingOrders = (clone $query)
+            ->whereIn('status', ['pending', 'processing'])
+            ->count();
+
+        // Cancelled orders
+        $cancelledOrders = (clone $query)
+            ->where('status', 'cancelled')
+            ->count();
+
+        // Completed orders (delivered)
+        $completedOrders = (clone $query)
+            ->where('status', 'delivered')
+            ->count();
+
+        return [
+            'total_orders' => $totalOrders,
+            'pending_orders' => $pendingOrders,
+            'cancelled_orders' => $cancelledOrders,
+            'completed_orders' => $completedOrders,
+        ];
     }
 
     /**
