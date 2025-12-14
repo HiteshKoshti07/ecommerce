@@ -188,7 +188,11 @@ $(document).ready(function () {
         $('#ecommerce-product-meta-description').val(p.meta_description);
         $('#ecommerce-product-meta-keywords').val(p.meta_keywords);
         $('#product-imagekit-main').val(p.product_image);
-        $('#product-imagekit-gallery').val(p.product_images);
+        if (Array.isArray(p.product_images)) {
+          $('#product-imagekit-gallery').val(p.product_images.join(','));
+        } else {
+          $('#product-imagekit-gallery').val('');
+        }
 
 
         if (quill) quill.root.innerHTML = p.description || '';
@@ -307,16 +311,30 @@ $(document).ready(function () {
     formData.append('variants', JSON.stringify(variants));
 
     // Add Dropzone file
-    if (productDropzone && productDropzone.files.length > 0) {
-      formData.append('product_image', productDropzone.files[0]);
-    }
+    // if (productDropzone && productDropzone.files.length > 0) {
+    //   formData.append('product_image', productDropzone.files[0]);
+    // }
 
     // Add MULTIPLE images from dropzone
-    if (multiDropzone && multiDropzone.files.length > 0) {
-      multiDropzone.files.forEach(file => {
-        formData.append('product_images[]', file);
-      });
-    }
+    // if (multiDropzone && multiDropzone.files.length > 0) {
+    //   multiDropzone.files.forEach(file => {
+    //     formData.append('product_images[]', file);
+    //   });
+    // }
+
+
+    // ✅ Add ImageKit gallery URLs as ARRAY
+const galleryValue = $('#product-imagekit-gallery').val(); // comma separated urls
+
+if (galleryValue) {
+  galleryValue
+    .split(',')
+    .map(v => v.trim())
+    .filter(v => v)
+    .forEach(url => {
+      formData.append('product_images[]', url);
+    });
+}
 
 
 

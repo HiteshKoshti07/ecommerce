@@ -48,7 +48,9 @@ class Product extends Model
         'variants' => 'array',
         'options' => 'array',
         'inventory' => 'array',
-        'tags' => 'array'
+        'tags' => 'array',
+        'product_images' => 'array',
+
     ];
 
 

@@ -15,9 +15,19 @@ document.addEventListener('DOMContentLoaded', function () {
     inactive: { title: 'Inactive', class: 'bg-label-danger' }
   };
 
-  const categoryObj = {
-    '711648c6-891e-400d-9ca9-a9131f7d0087': 'Woman',
-    'd3d90e42-a192-4044-824b-a79a73fd107e': 'Man'
+  // const categoryObj = {
+  //   '711648c6-891e-400d-9ca9-a9131f7d0087': 'Woman',
+  //   'd3d90e42-a192-4044-824b-a79a73fd107e': 'Man'
+  // };
+
+
+    const categoryObj = {
+    '0fe88ae2-e985-4e83-aee8-fa0ae3aa631f': 'designer-sarees',
+    '3339cee4-5dcc-4cd9-becb-0772e07974e2': 'cotton-saree',
+    '92416b88-b01e-4d0f-8c70-e8b197e0f953': 'organza-saree',
+    'c1c09abc-a06d-4c5d-a4b0-c7df46a52e80': 'party-wear-saree',
+    'd61bcea6-1cac-43bb-86f6-645771491bb4': 'trending-saree',
+    '3b539e1a-d205-4a48-8d0d-3cf142045c69': 'jacquard-saree'
   };
 
   const stockObj = { 0: 'Out of Stock', 1: 'In Stock' };
@@ -55,20 +65,32 @@ document.addEventListener('DOMContentLoaded', function () {
         {
           targets: 2,
           render: (data, type, full) => {
+            const maxLength = 60;
+
+            const name =
+              full.name && full.name.length > maxLength
+                ? full.name.substring(0, maxLength) + '...'
+                : full.name;
+
             const image = full.product_image
-            
-              ? `<img src="${full.product_image}" 
-                     class="rounded img-fluid" 
-                     style="width:60px; height:60px; object-fit:cover;">`
-              : `<span class="avatar-initial rounded-2 bg-label-secondary" 
-                     style="width:60px; height:60px;"></span>`;
+              ? `<img src="${full.product_image}"
+                    class="rounded img-fluid"
+                    style="width:60px; height:60px; object-fit:cover;">`
+              : `<span class="avatar-initial rounded-2 bg-label-secondary"
+                    style="width:60px; height:60px;"></span>`;
+
             return `
               <div class="d-flex align-items-center">
                 <div class="me-2">${image}</div>
-                <div><h6 class="text-nowrap mb-0">${full.name}</h6></div>
+                <div>
+                  <h6 class="text-nowrap mb-0" title="${full.name}">
+                    ${name}
+                  </h6>
+                </div>
               </div>`;
           }
         },
+
         {
           targets: 3,
           render: (data, type, full) =>

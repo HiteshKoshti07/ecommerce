@@ -193,14 +193,8 @@ class ProductController extends Controller
             }
 
             if (env('IMAGE_FROM')) {
-                // ✅ ImageKit URLs
                 $data['product_image'] = $request->product_image;
-                // gallery URLs (comma separated)
-                $galleryImages = array_filter(
-                    array_map('trim', explode(',', $request->product_images))
-                );
-
-                $data['product_images'] = json_encode($galleryImages);
+                $data['product_images'] = $request->product_images; // always array now
             } else {
 
                 // ✅ Local file upload (existing logic)
@@ -231,7 +225,6 @@ class ProductController extends Controller
             $data['product_work']   = $request->product_work;
             $data['product_length'] = $request->product_length;
             $data['product_care']   = $request->product_care;
-
 
             // ✅ Create or Update
             if ($product) {
