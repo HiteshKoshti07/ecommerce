@@ -358,9 +358,13 @@
                                 <label class="form-label mb-1" for="pro-collection">Collections</label>
                                 <select id="pro-collection" class="select2 form-select" data-placeholder="Select Collection">
                                     <option value="">Select Collection</option>
-                                    <option value="women-sarees">Women Saree</option>
-                                    <option value="women-western-wear">Women Westernwear</option>
-                                    <option value="women-dress">Women Dress</option>
+                                    <option value="party-wear-sarees">Party Wear Sarees </option>
+                                    <option value="premium-saree-collection">Premium Collection</option>
+                                    <option value="designer-sarees">Designer Sarees</option>
+                                    <option value="georgette-sarees">Georgette Sarees</option>
+                                    <option value="organza-sarees">Organza Sarees</option>
+                                    <option value="trending-party-wear-sarees">Trending Sarees</option>
+                                    <option value="silk-sarees">Silk Sarees</option>
                                 </select>
                                 <small id="error-product-collection" class="text-danger"></small>
                             </div>
